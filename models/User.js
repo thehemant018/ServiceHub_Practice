@@ -15,6 +15,16 @@ const UserSchema=new Schema({
         type:String,
         require:true
     },
+    location: {
+        type: {
+            type: String,
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // Array of [longitude, latitude]
+            required: true
+        }
+    },
     date:{
         type:String,
         default:new Date(+new Date() + 7*24*60*60*1000)

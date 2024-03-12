@@ -32,6 +32,16 @@ const ProfSchema=new Schema({
         default:"9545887585",
         require:true,
     },
+    location: {
+        type: {
+            type: String,
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // Array of [longitude, latitude]
+            required: true
+        }
+    },
     date:{
         type:String,
         default:new Date(+new Date() + 7*24*60*60*1000)

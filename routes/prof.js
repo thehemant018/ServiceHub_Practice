@@ -8,7 +8,7 @@ var jwt = require('jsonwebtoken');
 const JWT_SECRET = 'TumseNaHoPayega';
 var fetchuser = require('../middleware/fetchuser');
 var fetchprofs = require('../middleware/fetchprofs');
-var fetchprofsfororder=require('../middleware/fetchprofsfororder');
+var fetchprofsfororder = require('../middleware/fetchprofsfororder');
 const router = express.Router();
 
 
@@ -23,48 +23,105 @@ router.get('/fetchprofssional', fetchprofs, async (req, res) => {
 
 })
 
-router.post('/profcreateuser', [
-    body('name', "Enter valid name").isLength({ min: 3 }),
-    body('email', "Enter valid email").isEmail(),
-    body('password', 'Passwords must not be atleast 5 characters').isLength({ min: 5 })
-], async (req, res) => {
+//11 March
+// router.post('/profcreateuser', [
+//     body('name', "Enter valid name").isLength({ min: 3 }),
+//     body('email', "Enter valid email").isEmail(),
+//     body('password', 'Passwords must not be atleast 5 characters').isLength({ min: 5 })
+// ], async (req, res) => {
 
-    // validate result
-    let success = false;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ success, errors: errors.array() });
-    }
+//     // validate result
+//     let success = false;
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//         return res.status(400).json({ success, errors: errors.array() });
+//     }
 
-    try {
-        let professional = await Professional.findOne({ aadhar: req.body.aadhar });
-        if (professional) {
-            return res.status(400).json({ success, error: 'Sorry a user with this aadhar already exist' });
+//     try {
+//         let professional = await Professional.findOne({ aadhar: req.body.aadhar });
+//         if (professional) {
+//             return res.status(400).json({ success, error: 'Sorry a user with this aadhar already exist' });
+//         }
+
+//         const salt = await bcrypt.genSalt(10);
+//         const secPass = await bcrypt.hash(req.body.password, salt);
+
+//         professional = Professional.create({
+//             name: req.body.name,
+//             email: req.body.email,
+//             password: secPass,
+//             aadhar: req.body.aadhar,
+//             category: req.body.category,
+//         });
+//         const data = {
+//             professional: {
+//                 id: professional.id
+//             }
+//         }
+//         const authToken = jwt.sign(data, JWT_SECRET);
+//         success = true;
+//         res.json({ success, authToken });
+//     } catch (error) {
+//         console.log(error.message);
+//         res.status(500).send('Internal server Error');
+//     }
+// });
+
+
+router.post(
+    '/profcreateuser',
+    [
+        body('name', 'Enter a valid name').isLength({ min: 3 }),
+        body('email', 'Enter a valid email').isEmail(),
+        body('password', 'Passwords must be at least 5 characters').isLength({ min: 5 }),
+        body('aadhar', 'Enter a valid Aadhar').isLength({ min: 12, max: 12 }),
+        body('category', 'Enter a valid category').isString(),
+        body('latitude', 'Enter valid latitude').isNumeric(),
+        body('longitude', 'Enter valid longitude').isNumeric(),
+    ],
+    async (req, res) => {
+        // validate result
+        let success = false;
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success, errors: errors.array() });
         }
 
-        const salt = await bcrypt.genSalt(10);
-        const secPass = await bcrypt.hash(req.body.password, salt);
-
-        professional = Professional.create({
-            name: req.body.name,
-            email: req.body.email,
-            password: secPass,
-            aadhar: req.body.aadhar,
-            category: req.body.category,
-        });
-        const data = {
-            professional: {
-                id: professional.id
+        try {
+            let professional = await Professional.findOne({ aadhar: req.body.aadhar });
+            if (professional) {
+                return res.status(400).json({ success, error: 'Sorry, a user with this Aadhar already exists' });
             }
+
+            const salt = await bcrypt.genSalt(10);
+            const secPass = await bcrypt.hash(req.body.password, salt);
+
+            professional = await Professional.create({
+                name: req.body.name,
+                email: req.body.email,
+                password: secPass,
+                aadhar: req.body.aadhar,
+                category: req.body.category,
+                location: {
+                    type: 'Point',
+                    coordinates: [parseFloat(req.body.longitude), parseFloat(req.body.latitude)],
+                },
+            });
+
+            const data = {
+                professional: {
+                    id: professional.id,
+                },
+            };
+            const authToken = jwt.sign(data, JWT_SECRET);
+            success = true;
+            res.json({ success, authToken });
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).send('Internal server error');
         }
-        const authToken = jwt.sign(data, JWT_SECRET);
-        success = true;
-        res.json({ success, authToken });
-    } catch (error) {
-        console.log(error.message);
-        res.status(500).send('Internal server Error');
     }
-});
+);
 
 router.post('/proflogin', [
     body('aadhar', "Enter valid aadhar").isLength({ min: 12, max: 12 }),
@@ -214,14 +271,14 @@ router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req,
         const user_name = await User.findById(userId);
         // console.log('User name',user_name.name);
 
-       
+
 
         // Create a new service request with the professionalId, userId, and status
         const serviceRequest = new ServiceRequest({
             professionalId,
             customerId: userId,
             status: 'pending',
-            customerName:user_name.name
+            customerName: user_name.name
         });
 
         // Save the service request to the database
@@ -351,10 +408,53 @@ router.get('/booked-services/:customerId', fetchuser, async (req, res) => {
     }
 });
 
-  
 
 
 
+
+
+
+//12 march
+
+router.put(
+    '/update-location',
+    [
+        fetchprofs, // Ensure the user is authenticated
+        body('latitude', 'Enter a valid latitude').isNumeric(),
+        body('longitude', 'Enter a valid longitude').isNumeric(),
+    ],
+    async (req, res) => {
+        // Validate request body
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+
+        try {
+            const { latitude, longitude } = req.body;
+            const profId = req.professional.id;
+
+            // Update user's location in the database
+            const updatedProfessional = await Professional.findByIdAndUpdate(
+                profId,
+                {
+                    $set: {
+                        location: {
+                            type: 'Point',
+                            coordinates: [parseFloat(longitude), parseFloat(latitude)],
+                        },
+                    },
+                },
+                { new: true }
+            );
+
+            res.json({ success: true, message: 'Location updated successfully', professional: updatedProfessional });
+        } catch (error) {
+            console.error('Error updating location:', error);
+            res.status(500).json({ success: false, error: 'Internal server error' });
+        }
+    }
+);
 
 
 
