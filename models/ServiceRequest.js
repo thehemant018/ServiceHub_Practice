@@ -16,6 +16,14 @@ const serviceRequestSchema = new mongoose.Schema({
     type: String,
     default: 'Unknown',
   },
+  professionalName: {
+    type: String,
+    default: 'Unknown',
+  },
+  serviceName: {
+    type: String,
+    default: 'Unknown',
+  },
   status: {
     type: String,
     default: 'pending',
@@ -23,6 +31,28 @@ const serviceRequestSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+
+  //13 march
+  userlocation: {
+    type: {
+      type: String,
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // Array of [longitude, latitude]
+      required: true
+    }
+  },
+  proflocation: {
+    type: {
+      type: String,
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // Array of [longitude, latitude]
+      required: true
+    }
   },
 });
 

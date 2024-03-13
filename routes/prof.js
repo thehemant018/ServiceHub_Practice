@@ -269,6 +269,7 @@ router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req,
 
         // console.log('User ID:', userId);
         const user_name = await User.findById(userId);
+        const prof_name=await Professional.findById(professionalId);
         // console.log('User name',user_name.name);
 
 
@@ -278,9 +279,19 @@ router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req,
             professionalId,
             customerId: userId,
             status: 'pending',
-            customerName: user_name.name
+            customerName: user_name.name,
+            professionalName:prof_name.name,
+            serviceName:prof_name.category,
+            userlocation: {
+                type: 'Point',
+                coordinates: [user_name.location.coordinates[0],user_name.location.coordinates[1] ],
+            },
+            proflocation: {
+                type: 'Point',
+                coordinates: [prof_name.location.coordinates[0],prof_name.location.coordinates[1] ],
+            },
         });
-
+        
         // Save the service request to the database
         await serviceRequest.save();
 
@@ -469,6 +480,52 @@ router.get('/fetchprofessionalsbycategory/:category', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+
+
+
+
+//13 march (cancel service request)
+router.put('/cancelservice/:requestId', fetchprofs || fetchuser, async (req, res) => {
+    try {
+
+        const requestId = req.params.requestId;
+        //   const profId = req.professional.id ;// Assuming you have a professional ID in the authentication middleware
+
+        // let profId;
+        // if (req.professional && req.professional.id) {
+        //     profId = req.professional.id;
+        // } else if (req.user && req.user.id) {
+        //     profId = req.user.id;
+        // } else {
+        //     throw new Error('User or professional ID not found');
+        // }
+
+        // Assuming you have a ServiceRequest model
+        const serviceRequest = await ServiceRequest.findById(requestId);
+
+        if (!serviceRequest) {
+            return res.status(404).json({ error: 'Service request not found' });
+        }
+
+        // Ensure that the professional canceling the request matches the professional ID in the service request
+
+        // if (serviceRequest.professionalId.toString() !== profId) {
+        //     return res.status(403).json({ error: 'Unauthorized access to cancel this service request' });
+        // }
+
+        // For example, update the status to 'canceled'
+        serviceRequest.status = 'canceled';
+        await serviceRequest.save();
+
+        res.json({ success: true, message: 'Service request canceled successfully' });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
 
 
 module.exports = router;
