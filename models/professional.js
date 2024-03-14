@@ -27,6 +27,16 @@ const ProfSchema=new Schema({
         require:true,
         default:"Serviceman"
     },
+    city:{
+        type:String,
+        require:true,
+        default:"Anand"
+    },
+    address:{
+        type:String,
+        require:true,
+        default:"ADIT boys hostel, Anand"
+    },
     contact:{
         type:Number,
         default:"9545887585",

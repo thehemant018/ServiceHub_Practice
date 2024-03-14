@@ -9,8 +9,10 @@ const JWT_SECRET = 'TumseNaHoPayega';
 var fetchuser = require('../middleware/fetchuser');
 var fetchprofs = require('../middleware/fetchprofs');
 var fetchprofsfororder = require('../middleware/fetchprofsfororder');
+const { sendEmail } = require("../controllers/acceptemailControllers");
 const router = express.Router();
-
+const nodemailer = require("nodemailer");
+const dotenv = require("dotenv");
 
 router.get('/fetchprofssional', fetchprofs, async (req, res) => {
     try {
@@ -101,6 +103,8 @@ router.post(
                 email: req.body.email,
                 password: secPass,
                 aadhar: req.body.aadhar,
+                city: req.body.city,
+                address: req.body.address,
                 category: req.body.category,
                 location: {
                     type: 'Point',
@@ -260,7 +264,55 @@ router.get('/fetchallprofessionals', async (req, res) => {
 //   });
 
 
-//10 march (part2)
+//10 march (part2) correct
+// router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req, res) => {
+//     try {
+//         const { professionalId } = req.params;
+//         const { id: userId } = req.user; // Update 'user' to 'professional' or use 'req.professional' if using fetchprofs middleware
+//         // console.log('Professional ID:', professionalId);
+
+//         // console.log('User ID:', userId);
+//         const user_name = await User.findById(userId);
+//         const prof_name=await Professional.findById(professionalId);
+//         // console.log('User name',user_name.name);
+
+
+
+//         // Create a new service request with the professionalId, userId, and status
+//         const serviceRequest = new ServiceRequest({
+//             professionalId,
+//             customerId: userId,
+//             status: 'pending',
+//             customerName: user_name.name,
+//             professionalName:prof_name.name,
+//             serviceName:prof_name.category,
+//             userlocation: {
+//                 type: 'Point',
+//                 coordinates: [user_name.location.coordinates[0],user_name.location.coordinates[1] ],
+//             },
+//             proflocation: {
+//                 type: 'Point',
+//                 coordinates: [prof_name.location.coordinates[0],prof_name.location.coordinates[1] ],
+//             },
+//         });
+        
+//         // Save the service request to the database
+//         await serviceRequest.save();
+
+//         // console.log(user_name.email);
+
+        
+
+//         // Send a success response
+//         res.status(201).json({ message: 'Service booked successfully', serviceRequest });
+//     } catch (error) {
+//         console.error('Error booking service:', error.message);
+//         res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// });
+
+
+//14 march
 router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req, res) => {
     try {
         const { professionalId } = req.params;
@@ -295,6 +347,32 @@ router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req,
         // Save the service request to the database
         await serviceRequest.save();
 
+        // console.log(user_name.email);
+        // const subRouter = express.Router();
+        // router.subRouter('/sendmail',sendEmail);
+
+        let transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT,
+            secure: false, // true for 465, false for other ports
+            auth: {
+              user: process.env.SMTP_MAIL, // generated ethereal user
+              pass: process.env.SMTP_PASSWORD, // generated ethereal password
+            },
+          }); 
+        
+          const emailContent = `Dear ${user_name.name}, your ${prof_name.category} related services with ${prof_name.name} has been booked successfully.`;
+
+        const mailOptions = {
+            from: process.env.SMTP_MAIL,
+            to: 'mauryahemant202@gmail.com', // Sending email to the user
+            subject: 'Service Booking Confirmation',
+            text: emailContent, // You can customize the email content
+        };
+        
+        await transporter.sendMail(mailOptions);
+        console.log('mail send succesfuly')
+
         // Send a success response
         res.status(201).json({ message: 'Service booked successfully', serviceRequest });
     } catch (error) {
@@ -302,7 +380,6 @@ router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req,
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 
 
 
@@ -351,6 +428,38 @@ router.post('/acceptservice/:requestId', fetchprofs, async (req, res) => {
         // For example, update the status to 'accepted'
         serviceRequest.status = 'accepted';
         await serviceRequest.save();
+
+         //14 march
+         let transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT,
+            secure: false, // true for 465, false for other ports
+            auth: {
+              user: process.env.SMTP_MAIL, // generated ethereal user
+              pass: process.env.SMTP_PASSWORD, // generated ethereal password
+            },
+          }); 
+        
+          const emailContent=`Dear ${serviceRequest.customerName},
+
+          We are pleased to inform you that your service request for ${serviceRequest.serviceName} has been accepted by our professional, ${serviceRequest.professionalName}.\n
+          \tDate and Time of Service: ${serviceRequest.createdAt}\n
+          Please ensure that you are available at the specified date, time, and location for the service.\n
+          If you have any further questions or need assistance, feel free to contact us.\n\n
+          Thank you for choosing our services,\n
+          Servicehub`
+
+
+     
+        const mailOptions = {
+            from: process.env.SMTP_MAIL,
+            to: 'mauryahemant202@gmail.com', // Sending email to the user
+            subject: 'Service Acceptance Confirmation',
+            text: emailContent, // You can customize the email content
+        };
+        
+        await transporter.sendMail(mailOptions);
+        console.log('mail send succesfuly')
 
         res.json({ success: true, message: 'Service request accepted successfully' });
     } catch (error) {
@@ -518,6 +627,35 @@ router.put('/cancelservice/:requestId', fetchprofs || fetchuser, async (req, res
         serviceRequest.status = 'canceled';
         await serviceRequest.save();
 
+        //14 march
+        let transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT,
+            secure: false, // true for 465, false for other ports
+            auth: {
+              user: process.env.SMTP_MAIL, // generated ethereal user
+              pass: process.env.SMTP_PASSWORD, // generated ethereal password
+            },
+          }); 
+        
+          const emailContent = `Dear ${serviceRequest.customerName},,
+
+          We regret to inform you that your ${serviceRequest.serviceName} with ${serviceRequest.professionalName} service request has been canceled.\n
+          Please feel free to contact us if you have any questions or require further assistance.\n\n
+          Thank you,\n
+          Servicehub`
+
+          //14 march
+        const mailOptions = {
+            from: process.env.SMTP_MAIL,
+            to: 'mauryahemant202@gmail.com', // Sending email to the user
+            subject: 'Service Cancellation Confirmation',
+            text: emailContent, // You can customize the email content
+        };
+        
+        await transporter.sendMail(mailOptions);
+        console.log('mail send succesfuly')
+
         res.json({ success: true, message: 'Service request canceled successfully' });
     } catch (error) {
         console.error(error.message);
@@ -526,6 +664,22 @@ router.put('/cancelservice/:requestId', fetchprofs || fetchuser, async (req, res
 });
 
 
+//city wise display services
+router.get('/fetchprofessionalsbycity/:city', async (req, res) => {
+    const { city } = req.params;
+    try {
+      const professionals = await Professional.find({ city });
+      res.json(professionals);
+    } catch (error) {
+      console.error('Error fetching professionals by city:', error.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+  
+
+
+  //14 march 
+//   router.post('/sendmail',sendEmail);
 
 
 module.exports = router;
