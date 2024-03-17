@@ -16,9 +16,17 @@ const serviceRequestSchema = new mongoose.Schema({
     type: String,
     default: 'Unknown',
   },
+  customerEmail: {
+    type: String,
+    default: 'Unknown',
+  },
   professionalName: {
     type: String,
     default: 'Unknown',
+  },
+  professionalEmail: {
+    type: String,
+    default: 'leoleo@gmail.com',
   },
   serviceName: {
     type: String,

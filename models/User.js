@@ -15,6 +15,16 @@ const UserSchema=new Schema({
         type:String,
         require:true
     },
+    contact:{
+        type:Number,
+        default:"9545887585",
+        require:true,
+    },
+    address:{
+        type:String,
+        require:true,
+        default:"ADIT boys hostel, Anand"
+    },
     location: {
         type: {
             type: String,
@@ -25,6 +35,7 @@ const UserSchema=new Schema({
             required: true
         }
     },
+    
     date:{
         type:String,
         default:new Date(+new Date() + 7*24*60*60*1000)

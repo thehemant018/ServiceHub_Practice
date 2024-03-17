@@ -188,6 +188,19 @@ router.get('/getprofs', fetchprofs, async (req, res) => {
 });
 
 
+//17 march
+router.get('/profdetail/:profId',async(req,res)=>{
+    try {
+        const {profId}=req.params;
+        const detials=await Professional.findById(profId).select("-password");
+        // console.log(detials)
+        res.json(detials);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Internal server error');
+    }
+});
+
 router.get('/fetchallprofessionals', async (req, res) => {
     try {
         const professionals = await Professional.find().select("-password");
@@ -313,26 +326,113 @@ router.get('/fetchallprofessionals', async (req, res) => {
 
 
 //14 march
-router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req, res) => {
+// router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req, res) => {
+//     try {
+//         const { professionalId } = req.params;
+//         const { id: userId } = req.user ; // Update 'user' to 'professional' or use 'req.professional' if using fetchprofs middleware
+//         // console.log('Professional ID:', professionalId);
+
+//         // console.log('User ID:', userId);
+//         const user_name = await User.findById(userId);
+//         const prof_name=await Professional.findById(professionalId);
+//         // console.log('User name',user_name.name);
+
+
+
+       
+//         const serviceRequest = new ServiceRequest({
+//             professionalId,
+//             customerId: userId,
+//             status: 'pending',
+//             customerName: user_name.name,
+//             professionalName:prof_name.name,
+//             serviceName:prof_name.category,
+//             userlocation: {
+//                 type: 'Point',
+//                 coordinates: [user_name.location.coordinates[0],user_name.location.coordinates[1] ],
+//             },
+//             proflocation: {
+//                 type: 'Point',
+//                 coordinates: [prof_name.location.coordinates[0],prof_name.location.coordinates[1] ],
+//             },
+//         });
+        
+        
+//         await serviceRequest.save();
+
+//         // console.log(user_name.email);
+//         // const subRouter = express.Router();
+//         // router.subRouter('/sendmail',sendEmail);
+
+//         let transporter = nodemailer.createTransport({
+//             host: process.env.SMTP_HOST,
+//             port: process.env.SMTP_PORT,
+//             secure: false, // true for 465, false for other ports
+//             auth: {
+//               user: process.env.SMTP_MAIL, // generated ethereal user
+//               pass: process.env.SMTP_PASSWORD, // generated ethereal password
+//             },
+//           }); 
+        
+//           const emailContent = `Dear ${user_name.name}, your ${prof_name.category} related services with ${prof_name.name} has been booked successfully.`;
+
+//         const mailOptions = {
+//             from: process.env.SMTP_MAIL,
+//             to: 'mauryahemant202@gmail.com', // Sending email to the user
+//             subject: 'Service Booking Confirmation',
+//             text: emailContent, // You can customize the email content
+//         };
+        
+//         await transporter.sendMail(mailOptions);
+//         console.log('mail send succesfuly')
+
+//         // Send a success response
+//         res.status(201).json({ message: 'Service booked successfully', serviceRequest });
+//     } catch (error) {
+//         console.error('Error booking service:', error.message);
+//         res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// });
+
+//15 March
+let h=[fetchuser,fetchprofs]
+router.post('/bookservice/:professionalId',  h , async (req, res) => {
     try {
         const { professionalId } = req.params;
-        const { id: userId } = req.user; // Update 'user' to 'professional' or use 'req.professional' if using fetchprofs middleware
-        // console.log('Professional ID:', professionalId);
-
-        // console.log('User ID:', userId);
-        const user_name = await User.findById(userId);
+        let userId; 
+        let user_name; 
+        userId = req.user.id; // If user is logged in
+        user_name = await User.findById(userId);
+        if (!user_name || Object.keys(user_name).length === 0) {
+            // Applying fetchprofs middleware
+            userId=req.professional.id; 
+            await fetchprofs(req, res, async () => {
+                // Now try fetching user_name again
+                user_name = await Professional.findById(userId);
+                console.log(user_name);
+            });
+        }
         const prof_name=await Professional.findById(professionalId);
         // console.log('User name',user_name.name);
 
+        if (!user_name) {
+            console.log('user')
+            return res.status(404).json({ error: 'User not found' });
+        }
 
+        if (!prof_name) {
+            return res.status(404).json({ error: 'Professional not found' });
+        }
 
-        // Create a new service request with the professionalId, userId, and status
+       
         const serviceRequest = new ServiceRequest({
             professionalId,
             customerId: userId,
             status: 'pending',
             customerName: user_name.name,
+            customerEmail:user_name.email,
             professionalName:prof_name.name,
+            professionalEmail:prof_name.email,
             serviceName:prof_name.category,
             userlocation: {
                 type: 'Point',
@@ -344,7 +444,7 @@ router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req,
             },
         });
         
-        // Save the service request to the database
+        
         await serviceRequest.save();
 
         // console.log(user_name.email);
@@ -361,11 +461,12 @@ router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req,
             },
           }); 
         
-          const emailContent = `Dear ${user_name.name}, your ${prof_name.category} related services with ${prof_name.name} has been booked successfully.`;
+          const emailContent = `Dear ${prof_name.name}, your ${prof_name.category} related services with ${user_name.name} has been booked successfully please check further detials in portal.`;
 
         const mailOptions = {
             from: process.env.SMTP_MAIL,
-            to: 'mauryahemant202@gmail.com', // Sending email to the user
+            // to: 'mauryahemant202@gmail.com', // Sending email to the user
+            to:serviceRequest.professionalEmail,
             subject: 'Service Booking Confirmation',
             text: emailContent, // You can customize the email content
         };
@@ -380,6 +481,10 @@ router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req,
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+
+
+
 
 
 
@@ -453,7 +558,7 @@ router.post('/acceptservice/:requestId', fetchprofs, async (req, res) => {
      
         const mailOptions = {
             from: process.env.SMTP_MAIL,
-            to: 'mauryahemant202@gmail.com', // Sending email to the user
+            to: serviceRequest.customerEmail, // Sending email to the user
             subject: 'Service Acceptance Confirmation',
             text: emailContent, // You can customize the email content
         };
@@ -648,7 +753,7 @@ router.put('/cancelservice/:requestId', fetchprofs || fetchuser, async (req, res
           //14 march
         const mailOptions = {
             from: process.env.SMTP_MAIL,
-            to: 'mauryahemant202@gmail.com', // Sending email to the user
+            to: serviceRequest.customerEmail, // Sending email to the user
             subject: 'Service Cancellation Confirmation',
             text: emailContent, // You can customize the email content
         };

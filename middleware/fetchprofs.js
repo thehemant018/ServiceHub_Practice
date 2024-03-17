@@ -91,7 +91,7 @@ const fetchprofs = (req, res, next) => {
         const data = jwt.verify(token, JWT_SECRET);
         // console.log('Decoded Token Data:', data);
 
-        // Ensure that the professional property is set correctly
+        
         req.professional = data.professional || null;
         // console.log('Set Professional Data:', req.professional);
 
