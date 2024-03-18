@@ -55,8 +55,18 @@ const ProfSchema=new Schema({
     date:{
         type:String,
         default:new Date(+new Date() + 7*24*60*60*1000)
+    },
+    ratings: {
+        1: { type: Number, default: 0 },
+        2: { type: Number, default: 0 },
+        3: { type: Number, default: 0 },
+        4: { type: Number, default: 0 },
+        5: { type: Number, default: 0 }
     }
+   
 })
+
+
 
 const Professional=mongoose.model('professional',ProfSchema);
 module.exports=Professional;

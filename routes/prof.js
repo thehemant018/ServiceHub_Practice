@@ -2,6 +2,7 @@ const express = require('express');
 const Professional = require('../models/professional');
 const ServiceRequest = require('../models/ServiceRequest');
 const User = require('../models/User');
+const Rating = require('../models/Rating');
 const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 var jwt = require('jsonwebtoken');
@@ -211,188 +212,7 @@ router.get('/fetchallprofessionals', async (req, res) => {
     }
 });
 
-//before 8 march 
-// router.post('/bookservice/:professionalId', async (req, res) => {
-//     try {
-//       const professional = await Professional.findById(req.params.professionalId);
 
-//       if (!professional) {
-//         return res.status(404).json({ error: 'Professional not found' });
-//       }
-
-//       // Perform booking logic here
-//       // You can update the professional's status, send notifications, etc.
-
-//       res.json({ success: true, message: 'Service booked successfully' });
-//     } catch (error) {
-//       console.error(error.message);
-//       res.status(500).send('Internal Server Error');
-//     }
-//   });
-
-//before 8 march 
-//   router.post('/acceptservice/:requestId', async (req, res) => {
-//     try {
-//       // Assuming you have a ServiceRequest model
-//       // Update the model name and structure based on your actual implementation
-//       const serviceRequest = await Professional.findById(req.params.requestId);
-
-//       if (!serviceRequest) {
-//         return res.status(404).json({ error: 'Service request not found' });
-//       }
-
-//       // Perform logic to accept the service request
-//       // You can update the service request status, send notifications, etc.
-
-//       res.json({ success: true, message: 'Service request accepted successfully' });
-//     } catch (error) {
-//       console.error(error.message);
-//       res.status(500).send('Internal Server Error');
-//     }
-//   });
-
-
-
-//10 March (part1 not include cutomer id)
-
-// router.post('/bookservice/:professionalId', async (req, res) => {
-//     try {
-//       const { professionalId } = req.params;
-
-//       // Create a new service request
-//       const serviceRequest = new ServiceRequest({
-//         professionalId,
-//         status: 'pending', // You can change the default status if needed
-//       });
-
-//       // Save the service request to the database
-//       await serviceRequest.save();
-//       console.log(serviceRequest);
-//       // Send a success response
-//       res.status(201).json({ message: 'Service booked successfully', serviceRequest });
-//     } catch (error) {
-//       console.error('Error booking service:', error.message);
-//       res.status(500).json({ error: 'Internal Server Error' });
-//     }
-//   });
-
-
-//10 march (part2) correct
-// router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req, res) => {
-//     try {
-//         const { professionalId } = req.params;
-//         const { id: userId } = req.user; // Update 'user' to 'professional' or use 'req.professional' if using fetchprofs middleware
-//         // console.log('Professional ID:', professionalId);
-
-//         // console.log('User ID:', userId);
-//         const user_name = await User.findById(userId);
-//         const prof_name=await Professional.findById(professionalId);
-//         // console.log('User name',user_name.name);
-
-
-
-//         // Create a new service request with the professionalId, userId, and status
-//         const serviceRequest = new ServiceRequest({
-//             professionalId,
-//             customerId: userId,
-//             status: 'pending',
-//             customerName: user_name.name,
-//             professionalName:prof_name.name,
-//             serviceName:prof_name.category,
-//             userlocation: {
-//                 type: 'Point',
-//                 coordinates: [user_name.location.coordinates[0],user_name.location.coordinates[1] ],
-//             },
-//             proflocation: {
-//                 type: 'Point',
-//                 coordinates: [prof_name.location.coordinates[0],prof_name.location.coordinates[1] ],
-//             },
-//         });
-        
-//         // Save the service request to the database
-//         await serviceRequest.save();
-
-//         // console.log(user_name.email);
-
-        
-
-//         // Send a success response
-//         res.status(201).json({ message: 'Service booked successfully', serviceRequest });
-//     } catch (error) {
-//         console.error('Error booking service:', error.message);
-//         res.status(500).json({ error: 'Internal Server Error' });
-//     }
-// });
-
-
-//14 march
-// router.post('/bookservice/:professionalId', fetchuser || fetchprofs, async (req, res) => {
-//     try {
-//         const { professionalId } = req.params;
-//         const { id: userId } = req.user ; // Update 'user' to 'professional' or use 'req.professional' if using fetchprofs middleware
-//         // console.log('Professional ID:', professionalId);
-
-//         // console.log('User ID:', userId);
-//         const user_name = await User.findById(userId);
-//         const prof_name=await Professional.findById(professionalId);
-//         // console.log('User name',user_name.name);
-
-
-
-       
-//         const serviceRequest = new ServiceRequest({
-//             professionalId,
-//             customerId: userId,
-//             status: 'pending',
-//             customerName: user_name.name,
-//             professionalName:prof_name.name,
-//             serviceName:prof_name.category,
-//             userlocation: {
-//                 type: 'Point',
-//                 coordinates: [user_name.location.coordinates[0],user_name.location.coordinates[1] ],
-//             },
-//             proflocation: {
-//                 type: 'Point',
-//                 coordinates: [prof_name.location.coordinates[0],prof_name.location.coordinates[1] ],
-//             },
-//         });
-        
-        
-//         await serviceRequest.save();
-
-//         // console.log(user_name.email);
-//         // const subRouter = express.Router();
-//         // router.subRouter('/sendmail',sendEmail);
-
-//         let transporter = nodemailer.createTransport({
-//             host: process.env.SMTP_HOST,
-//             port: process.env.SMTP_PORT,
-//             secure: false, // true for 465, false for other ports
-//             auth: {
-//               user: process.env.SMTP_MAIL, // generated ethereal user
-//               pass: process.env.SMTP_PASSWORD, // generated ethereal password
-//             },
-//           }); 
-        
-//           const emailContent = `Dear ${user_name.name}, your ${prof_name.category} related services with ${prof_name.name} has been booked successfully.`;
-
-//         const mailOptions = {
-//             from: process.env.SMTP_MAIL,
-//             to: 'mauryahemant202@gmail.com', // Sending email to the user
-//             subject: 'Service Booking Confirmation',
-//             text: emailContent, // You can customize the email content
-//         };
-        
-//         await transporter.sendMail(mailOptions);
-//         console.log('mail send succesfuly')
-
-//         // Send a success response
-//         res.status(201).json({ message: 'Service booked successfully', serviceRequest });
-//     } catch (error) {
-//         console.error('Error booking service:', error.message);
-//         res.status(500).json({ error: 'Internal Server Error' });
-//     }
-// });
 
 //15 March
 let h=[fetchuser,fetchprofs]
@@ -782,7 +602,77 @@ router.get('/fetchprofessionalsbycity/:city', async (req, res) => {
   });
   
 
+  //fetch services
+  router.get('/fetchservicedetail/:id',async(req,res)=>{
+    const { id } = req.params;
+    try{
+        const service=await ServiceRequest.findById(id);
+        res.json(service)
+    }catch (error) {
+        console.error('Error fetching professionals by city:', error.message);
+        res.status(500).json({ error: 'Server error' });
+      }
+  })
 
+
+  router.post('/ratings',async (req, res) => {
+    try {
+      const { serviceId, userId, profId,rating, feedback } = req.body;  
+      const newRating = new Rating({
+        serviceId,
+        userId,
+        profId,
+        rating,
+        feedback
+      });
+      await newRating.save();
+
+      const professional = await Professional.findById(profId);
+
+      if (!professional) {
+          return res.status(404).json({ error: 'Professional not found' });
+      }
+
+   
+
+
+    if (professional.ratings.hasOwnProperty(rating)) {
+        professional.ratings[rating]++;
+    } else {
+        return res.status(400).json({ error: 'Invalid rating value' });
+    }
+      await professional.save();
+    
+
+      res.status(201).json({ message: 'Rating saved successfully' });
+    } catch (error) {
+      console.error('Error saving rating:', error.message);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/getratings/:profId', async (req, res) => {
+    try {
+      const { profId } = req.params;
+      
+      // Find ratings with the specified profId
+      const ratings = await Rating.find({ profId });
+  
+      res.json(ratings);
+    } catch (error) {
+      console.error('Error fetching ratings:', error.message);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+
+
+
+  
+
+  // Assuming you're using Express.js
+
+  
   //14 march 
 //   router.post('/sendmail',sendEmail);
 
