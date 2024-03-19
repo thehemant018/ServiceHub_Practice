@@ -271,6 +271,7 @@ router.post('/bookservice/:professionalId',  h , async (req, res) => {
         // const subRouter = express.Router();
         // router.subRouter('/sendmail',sendEmail);
 
+        // send mail 
         let transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
             port: process.env.SMTP_PORT,
@@ -279,6 +280,9 @@ router.post('/bookservice/:professionalId',  h , async (req, res) => {
               user: process.env.SMTP_MAIL, // generated ethereal user
               pass: process.env.SMTP_PASSWORD, // generated ethereal password
             },
+            tls: {
+                rejectUnauthorized: false // Accept self-signed certificates  19 march
+            }
           }); 
         
           const emailContent = `Dear ${prof_name.name}, your ${prof_name.category} related services with ${user_name.name} has been booked successfully please check further detials in portal.`;
@@ -666,15 +670,37 @@ router.get('/fetchprofessionalsbycity/:city', async (req, res) => {
   });
 
 
+  //19 march
+  
+router.delete('/deleteprofessional/:professionalId', async (req, res) => {
+    const professionalId = req.params.professionalId; // Corrected parameter name
+    try {
+        await Professional.findByIdAndDelete(professionalId);
+        console.log('Professional deleted successfully');
+        res.status(200).json({ message: 'Professional deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting professional:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
+router.get('/ratings/:profId', async (req, res) => {
+    const profId = req.params.profId;
+  
+    try {
+      // Send request to fetch data based on profId
+      const ratings = await Rating.find({ profId: profId }).exec();
+      res.json(ratings);
+    } catch (error) {
+      // Handle error
+      console.error("Error fetching data:", error);
+      res.status(500).json({ error: "An error occurred while fetching data" });
+    }
+  });
 
   
 
-  // Assuming you're using Express.js
-
-  
-  //14 march 
-//   router.post('/sendmail',sendEmail);
+ 
 
 
 module.exports = router;

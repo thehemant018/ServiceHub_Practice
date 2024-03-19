@@ -175,7 +175,15 @@ router.get('/getuser', fetchuser, async (req, res) => {
     }
 });
 
-
+router.get('/getallusers',async(req,res)=>{
+    try {
+        const users=await User.find().select("-password");
+        res.json(users);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Internal server error');
+    }
+})
 //12 march
 
 router.put(
@@ -219,5 +227,17 @@ router.put(
 );
 
 
+// 19 march
+router.delete('/deleteuser/:userId', async (req, res) => {
+    const userId = req.params.userId; // Corrected parameter name
+    try {
+        await User.findByIdAndDelete(userId);
+        console.log('User deleted successfully')
+        res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting user:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 module.exports = router;

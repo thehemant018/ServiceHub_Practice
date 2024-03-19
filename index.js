@@ -15,6 +15,7 @@ const corsOptions = {
 app.use(express.urlencoded({ extended: true }));
 app.use(cors())
 app.use(express.json())
+app.use('/api/admin',require('./routes/admin.js'));
 app.use('/api/auth',require('./routes/auth.js'));
 app.use('/api/prof',require('./routes/prof.js'));
 
