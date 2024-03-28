@@ -19,6 +19,7 @@ app.use('/api/admin',require('./routes/admin.js'));
 app.use('/api/auth',require('./routes/auth.js'));
 app.use('/api/prof',require('./routes/prof.js'));
 app.use('/api/query',require('./routes/query.js'));
+app.use('/api/subscription',require('./routes/subscription.js'));
 
 app.get('/',async (req,res)=>{
     res.send('Marcos');

@@ -39,7 +39,14 @@ const UserSchema=new Schema({
     date:{
         type:String,
         default:new Date(+new Date() + 7*24*60*60*1000)
-    }
+    },
+    subscription:{
+        type:String,
+    },
+    subscriptionStatus:{
+        type:String,
+        default: 'pending',
+    },
 })
 
 const User=mongoose.model('user',UserSchema);

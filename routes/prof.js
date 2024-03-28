@@ -224,21 +224,31 @@ router.post('/bookservice/:professionalId',  h , async (req, res) => {
         userId = req.user.id; // If user is logged in
         user_name = await User.findById(userId);
         if (!user_name || Object.keys(user_name).length === 0) {
-            // Applying fetchprofs middleware
+            
             userId=req.professional.id; 
             await fetchprofs(req, res, async () => {
-                // Now try fetching user_name again
+               
                 user_name = await Professional.findById(userId);
                 console.log(user_name);
             });
+           
         }
         const prof_name=await Professional.findById(professionalId);
         // console.log('User name',user_name.name);
-
+       
+       
         if (!user_name) {
             console.log('user')
             return res.status(404).json({ error: 'User not found' });
         }
+       
+        if (!user_name.subscription) {
+            return res.status(400).json({ error: 'Please subscribe to book services' });
+        }
+        if (user_name.subscriptionStatus=="pending") {
+            return res.status(400).json({ error: 'Please wait a few minutes to approve the subscription' });
+        }
+
 
         if (!prof_name) {
             return res.status(404).json({ error: 'Professional not found' });
@@ -698,9 +708,21 @@ router.get('/ratings/:profId', async (req, res) => {
     }
   });
 
-  
 
- 
 
+//   27th march
+router.put('/subscription',fetchuser,async(req,res)=>{
+    try {
+        const { transactionId } = req.body;
+        const userId = req.user.id;
+        // subscription
+        // let user=await User.findByIdAndUpdate(userId,{subscription:tarnsactionId});
+        let user = await User.findByIdAndUpdate(userId, { subscription: transactionId }, { new: true }); 
+        res.json(user);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+      res.status(500).json({ error: "An error occurred while fetching data" });
+    }
+}) 
 
 module.exports = router;
